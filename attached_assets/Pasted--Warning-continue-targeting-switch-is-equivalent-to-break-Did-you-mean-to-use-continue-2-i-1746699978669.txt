@@ -1,0 +1,33 @@
+
+Warning: "continue" targeting switch is equivalent to "break". Did you mean to use "continue 2"? in /home/runner/workspace/long_polling_bot.php on line 958
+
+Warning: "continue" targeting switch is equivalent to "break". Did you mean to use "continue 2"? in /home/runner/workspace/long_polling_bot.php on line 1131
+
+Warning: "continue" targeting switch is equivalent to "break". Did you mean to use "continue 2"? in /home/runner/workspace/long_polling_bot.php on line 1152
+
+Warning: "continue" targeting switch is equivalent to "break". Did you mean to use "continue 2"? in /home/runner/workspace/long_polling_bot.php on line 1235
+
+Warning: "continue" targeting switch is equivalent to "break". Did you mean to use "continue 2"? in /home/runner/workspace/long_polling_bot.php on line 1340
+
+Warning: "continue" targeting switch is equivalent to "break". Did you mean to use "continue 2"? in /home/runner/workspace/long_polling_bot.php on line 1390
+
+Warning: "continue" targeting switch is equivalent to "break". Did you mean to use "continue 2"? in /home/runner/workspace/long_polling_bot.php on line 1449
+
+Warning: "continue" targeting switch is equivalent to "break". Did you mean to use "continue 2"? in /home/runner/workspace/long_polling_bot.php on line 3938
+
+Warning: "continue" targeting switch is equivalent to "break". Did you mean to use "continue 2"? in /home/runner/workspace/long_polling_bot.php on line 3980
+
+Warning: "continue" targeting switch is equivalent to "break". Did you mean to use "continue 2"? in /home/runner/workspace/long_polling_bot.php on line 4019
+
+Warning: "continue" targeting switch is equivalent to "break". Did you mean to use "continue 2"? in /home/runner/workspace/long_polling_bot.php on line 4066
+
+Warning: "continue" targeting switch is equivalent to "break". Did you mean to use "continue 2"? in /home/runner/workspace/long_polling_bot.php on line 4155
+ربات تلگرام اصلی (نسخه کمینه) در حال اجرا با روش Long Polling...
+آخرین آپدیت شروع: 198623802
+برای توقف، کلید Ctrl+C را فشار دهید.
+
+.......
+آپدیت جدید (ID: 198623802)
+پیام از pooya12345678910: 👀 بازی با ناشناس - Telegram ID: 286420965
+Database connection error: could not find driver
+Database connection error: could not find driver
