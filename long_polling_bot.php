@@ -41,29 +41,6 @@ function getBotInfo($token) {
     return ['username' => 'your_bot']; // مقدار پیش‌فرض در صورت خطا
 }
 
-/**
- * ساخت لینک رفرال
- * 
- * @param string $token توکن ربات
- * @param int $user_id شناسه کاربر
- * @return string لینک رفرال
- */
-function generateReferralLink($token, $user_id) {
-    // استفاده از تابع قبلی برای سازگاری با کد موجود
-    $botInfo = getBotInfo($token);
-    $botUsername = isset($botInfo['username']) ? $botInfo['username'] : 'your_bot';
-    
-    // ساخت لینک با پیشوند ref_ برای سازگاری با سیستم رفرال
-    return "https://t.me/" . $botUsername . "?start=ref_" . $user_id;
-}
-
-// تابع ساخت لینک رفرال با استفاده از TelegramHelper
-// این تابع میتواند در بروز رسانی‌های آینده جایگزین تابع بالا شود
-function generateReferralLinkWithHelper($user_id) {
-    require_once __DIR__ . '/application/helpers/TelegramHelper.php';
-    return \application\helpers\TelegramHelper::generateReferralLink($user_id);
-}
-
 function sendMessageWithInlineKeyboard($token, $chat_id, $message, $keyboard, $parse_mode = 'Markdown') {
     $data = [
         'chat_id' => $chat_id,
@@ -1159,10 +1136,11 @@ while (true) {
                     $message = "🔗 *لینک رفرال اختصاصی شما*\n\n";
                     $message .= "از لینک زیر برای دعوت از دوستان خود استفاده کنید:\n\n";
                     
-                    // استفاده از تابع generateReferralLink برای ساخت لینک رفرال یکپارچه
-                    $referralLink = generateReferralLink($_ENV['TELEGRAM_TOKEN'], $userData['id']);
-                    $message .= "`" . $referralLink . "`\n\n";
+                    // دریافت اطلاعات ربات برای ساخت لینک رفرال
+                    $botInfo = getBotInfo($_ENV['TELEGRAM_TOKEN']);
+                    $botUsername = isset($botInfo['username']) ? $botInfo['username'] : 'your_bot';
                     
+                    $message .= "`https://t.me/" . $botUsername . "?start=" . $userData['id'] . "`\n\n";
                     $message .= "💰 *سیستم پاداش دهی رفرال:*\n";
                     $message .= "• عضویت اولیه: 0.5 دلتا کوین\n";
                     $message .= "• اولین برد: 1.5 دلتا کوین\n";
@@ -1212,10 +1190,11 @@ while (true) {
                         $message = "📊 *وضعیت زیرمجموعه‌ها*\n\n";
                         $message .= "⚠️ شما هنوز هیچ زیرمجموعه‌ای ندارید!\n\n";
                         $message .= "برای دعوت از دوستان، لینک اختصاصی خود را به آنها ارسال کنید:\n";
-                        // دریافت اطلاعات ربات
-                        $botInfo = getBotInfo($_ENV['TELEGRAM_TOKEN']);
-                        $botUsername = isset($botInfo['username']) ? $botInfo['username'] : 'your_bot';
-                        $message .= "https://t.me/" . $botUsername . "?start=" . $userData['id'];
+                        
+// دریافت اطلاعات ربات
+$botInfo = getBotInfo($_ENV['TELEGRAM_TOKEN']);
+$botUsername = isset($botInfo['username']) ? $botInfo['username'] : 'your_bot';
+$message .= "https://t.me/" . $botUsername . "?start=" . $userData['id'];
                         
                         editMessageText($_ENV['TELEGRAM_TOKEN'], $chat_id, $message_id, $message);
                         answerCallbackQuery($_ENV['TELEGRAM_TOKEN'], $callback_query['id']);
@@ -1225,11 +1204,11 @@ while (true) {
                     // نمایش لیست زیرمجموعه‌ها
                     $message = "📊 *وضعیت زیرمجموعه‌ها*\n\n";
                     $message .= "لینک اختصاصی شما برای دعوت از دوستان:\n";
-                    // دریافت اطلاعات ربات
-                    $botInfo = getBotInfo($_ENV['TELEGRAM_TOKEN']);
-                    $botUsername = isset($botInfo['username']) ? $botInfo['username'] : 'your_bot';
+// دریافت اطلاعات ربات
+$botInfo = getBotInfo($_ENV['TELEGRAM_TOKEN']);
+$botUsername = isset($botInfo['username']) ? $botInfo['username'] : 'your_bot';
 
-                    $message .= "https://t.me/" . $botUsername . "?start=" . $userData['id'] . "\n\n";
+$message .= "https://t.me/" . $botUsername . "?start=" . $userData['id'] . "\n\n";
                     $message .= "📋 *لیست زیرمجموعه‌های شما:*\n";
                     
                     $total_rewards = 0;
@@ -3491,10 +3470,10 @@ while (true) {
                         $message = "📊 *وضعیت زیرمجموعه‌ها*\n\n";
                         $message .= "⚠️ شما هنوز هیچ زیرمجموعه‌ای ندارید!\n\n";
                         $message .= "برای دعوت از دوستان، لینک اختصاصی خود را به آنها ارسال کنید:\n";
-                        // دریافت اطلاعات ربات
-                        $botInfo = getBotInfo($_ENV['TELEGRAM_TOKEN']);
-                        $botUsername = isset($botInfo['username']) ? $botInfo['username'] : 'your_bot';
-                        $message .= "https://t.me/" . $botUsername . "?start=" . $userData['id'];
+// دریافت اطلاعات ربات
+$botInfo = getBotInfo($_ENV['TELEGRAM_TOKEN']);
+$botUsername = isset($botInfo['username']) ? $botInfo['username'] : 'your_bot';
+$message .= "https://t.me/" . $botUsername . "?start=" . $userData['id'];
                         
                         sendMessage($_ENV['TELEGRAM_TOKEN'], $chat_id, $message);
                         continue;
@@ -3503,11 +3482,11 @@ while (true) {
                     // نمایش لیست زیرمجموعه‌ها
                     $message = "📊 *وضعیت زیرمجموعه‌ها*\n\n";
                     $message .= "لینک اختصاصی شما برای دعوت از دوستان:\n";
-                    // دریافت اطلاعات ربات
-                    $botInfo = getBotInfo($_ENV['TELEGRAM_TOKEN']);
-                    $botUsername = isset($botInfo['username']) ? $botInfo['username'] : 'your_bot';
+// دریافت اطلاعات ربات
+$botInfo = getBotInfo($_ENV['TELEGRAM_TOKEN']);
+$botUsername = isset($botInfo['username']) ? $botInfo['username'] : 'your_bot';
 
-                    $message .= "https://t.me/" . $botUsername . "?start=" . $userData['id'] . "\n\n";
+$message .= "https://t.me/" . $botUsername . "?start=" . $userData['id'] . "\n\n";
                     $message .= "📋 *لیست زیرمجموعه‌های شما:*\n";
                     
                     $total_rewards = 0;
@@ -5657,31 +5636,6 @@ while (true) {
             // پاسخ به دستور /start
             else if (strpos($text, '/start') === 0) {
                 $first_name = isset($update['message']['from']['first_name']) ? $update['message']['from']['first_name'] : 'کاربر';
-                
-                // بررسی پارامتر رفرال اگر وجود داشته باشد
-                $ref_id = null;
-                $command_parts = explode(' ', $text);
-                if (count($command_parts) > 1) {
-                    $start_param = $command_parts[1];
-                    // اگر پارامتر با ref_ شروع شود، آن را به عنوان رفرال در نظر می‌گیریم
-                    if (strpos($start_param, 'ref_') === 0) {
-                        $ref_id = intval(substr($start_param, 4)); // حذف پیشوند ref_
-                        echo "کاربر با کد رفرال {$ref_id} وارد شده است.\n";
-                    }
-                }
-                
-                // ایجاد نمونه از کلاس UserController با پارامتر رفرال
-                try {
-                    require_once __DIR__ . '/application/controllers/UserController.php';
-                    $userController = new \application\controllers\UserController($update, $ref_id);
-                    
-                    // بررسی وضعیت رفرال
-                    if ($userController->is_ref) {
-                        echo "کاربر با کد رفرال ثبت شد.\n";
-                    }
-                } catch (Exception $e) {
-                    echo "خطا در ثبت کاربر: " . $e->getMessage() . "\n";
-                }
                 
                 // دقیقاً متن اصلی از فایل locale
                 $response_text = "سلااام {$first_name} عزیززز به ربات بازی ما خوشومدییی❤️‍🔥
