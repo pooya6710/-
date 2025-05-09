@@ -236,6 +236,20 @@ class QueryBuilder
     }
     
     /**
+     * افزودن شرط خام (Raw)
+     * @param string $condition شرط خام
+     * @param array $params پارامترها (اختیاری)
+     * @return $this
+     */
+    public function whereRaw($condition, $params = [])
+    {
+        $this->wheres[] = $condition;
+        $this->params = array_merge($this->params, is_array($params) ? $params : [$params]);
+        
+        return $this;
+    }
+    
+    /**
      * انتخاب ستون‌ها
      * @param string|array $columns ستون‌ها
      * @return $this
@@ -381,6 +395,20 @@ class QueryBuilder
         $stmt = DB::query($query, $this->params);
         $result = $stmt->fetch();
         return $result ? $result[$column] : null;
+    }
+    
+    /**
+     * محاسبه میانگین
+     * @param string $column نام ستون
+     * @return float|null
+     */
+    public function avg($column)
+    {
+        $this->selects = "AVG($column) as avg_value";
+        $query = $this->buildSelectQuery();
+        $stmt = DB::query($query, $this->params);
+        $result = $stmt->fetch();
+        return $result ? (float)$result['avg_value'] : null;
     }
     
     /**
