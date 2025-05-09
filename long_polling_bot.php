@@ -111,8 +111,123 @@ while (true) {
             
             echo "کالبک کوئری دریافت شد: {$callback_data}\n";
             
+            // پردازش پنل ادمین (فرمت admin:)
+            if (strpos($callback_data, 'admin:') === 0) {
+                try {
+                    require_once __DIR__ . '/application/controllers/AdminController.php';
+                    $adminController = new \application\controllers\AdminController($user_id);
+                    
+                    // بررسی دسترسی ادمین
+                    if (!$adminController->isAdmin()) {
+                        answerCallbackQuery($_ENV['TELEGRAM_TOKEN'], $callback_query['id'], "⚠️ شما دسترسی لازم برای این بخش را ندارید.");
+                        continue;
+                    }
+                    
+                    // استخراج عملیات مورد نظر
+                    $action = substr($callback_data, strlen('admin:'));
+                    
+                    // انجام عملیات بر اساس نوع آن
+                    switch ($action) {
+                        case 'manage_admins':
+                            // نمایش منوی مدیریت ادمین‌ها
+                            $message = "👥 *مدیریت ادمین‌ها*\n\n";
+                            $message .= "از طریق این بخش می‌توانید ادمین‌های ربات را مدیریت کنید.";
+                            
+                            $admin_keyboard = json_encode([
+                                'inline_keyboard' => [
+                                    [
+                                        ['text' => '➕ افزودن ادمین', 'callback_data' => 'admin_action:add'],
+                                        ['text' => '❌ حذف ادمین', 'callback_data' => 'admin_action:remove']
+                                    ],
+                                    [
+                                        ['text' => '📋 لیست ادمین‌ها', 'callback_data' => 'admin_action:list']
+                                    ],
+                                    [
+                                        ['text' => '🔙 بازگشت به پنل مدیریت', 'callback_data' => 'admin:panel']
+                                    ]
+                                ]
+                            ]);
+                            
+                            editMessageTextWithKeyboard($_ENV['TELEGRAM_TOKEN'], $chat_id, $message_id, $message, $admin_keyboard);
+                            answerCallbackQuery($_ENV['TELEGRAM_TOKEN'], $callback_query['id']);
+                            break;
+                            
+                        case 'stats':
+                            // نمایش آمار ربات
+                            $stats_result = $adminController->getBotStats();
+                            
+                            if (!$stats_result['success']) {
+                                answerCallbackQuery($_ENV['TELEGRAM_TOKEN'], $callback_query['id'], "⚠️ خطا در دریافت آمار: " . $stats_result['message']);
+                                continue 2;
+                            }
+                            
+                            $stats = $stats_result['stats'];
+                            
+                            // ساخت متن آمار
+                            $stats_message = "📊 *آمار ربات*\n\n";
+                            $stats_message .= "👥 تعداد کل کاربران: " . ($stats['total_users'] ?? 0) . "\n";
+                            $stats_message .= "🎮 تعداد کل بازی‌ها: " . ($stats['total_games'] ?? 0) . "\n";
+                            $stats_message .= "🎲 بازی‌های فعال: " . ($stats['active_games'] ?? 0) . "\n";
+                            $stats_message .= "🎯 بازی‌های امروز: " . ($stats['games_today'] ?? 0) . "\n";
+                            $stats_message .= "💰 میانگین دلتا کوین‌ها: " . ($stats['avg_deltacoins'] ?? 0) . "\n";
+                            $stats_message .= "🆕 کاربران جدید امروز: " . ($stats['new_users_today'] ?? 0) . "\n";
+                            
+                            $back_keyboard = json_encode([
+                                'inline_keyboard' => [
+                                    [
+                                        ['text' => '🔙 بازگشت به پنل مدیریت', 'callback_data' => 'admin:panel']
+                                    ]
+                                ]
+                            ]);
+                            
+                            editMessageTextWithKeyboard($_ENV['TELEGRAM_TOKEN'], $chat_id, $message_id, $stats_message, $back_keyboard);
+                            answerCallbackQuery($_ENV['TELEGRAM_TOKEN'], $callback_query['id']);
+                            break;
+                            
+                        case 'panel':
+                            // بازگشت به پنل اصلی مدیریت
+                            $admin_menu = "👨‍💻 *پنل مدیریت ربات*\n\n";
+                            $admin_menu .= "به پنل مدیریت ربات خوش آمدید.\n";
+                            $admin_menu .= "از طریق این پنل می‌توانید بخش‌های مختلف ربات را مدیریت کنید.\n\n";
+                            $admin_menu .= "لطفاً یکی از گزینه‌های زیر را انتخاب کنید:";
+                            
+                            $admin_keyboard = json_encode([
+                                'inline_keyboard' => [
+                                    [
+                                        ['text' => '📊 آمار ربات', 'callback_data' => 'admin:stats'],
+                                        ['text' => '👥 مدیریت ادمین‌ها', 'callback_data' => 'admin:manage_admins']
+                                    ],
+                                    [
+                                        ['text' => '📨 پیام همگانی', 'callback_data' => 'admin:broadcast'],
+                                        ['text' => '📬 فوروارد همگانی', 'callback_data' => 'admin:forward']
+                                    ],
+                                    [
+                                        ['text' => '🎮 مدیریت بازی‌ها', 'callback_data' => 'admin:manage_games'],
+                                        ['text' => '⚙️ تنظیمات ربات', 'callback_data' => 'admin:settings']
+                                    ],
+                                    [
+                                        ['text' => '💰 مدیریت تراکنش‌ها', 'callback_data' => 'admin:transactions'],
+                                        ['text' => '📤 مدیریت برداشت‌ها', 'callback_data' => 'admin:withdrawals']
+                                    ]
+                                ]
+                            ]);
+                            
+                            editMessageTextWithKeyboard($_ENV['TELEGRAM_TOKEN'], $chat_id, $message_id, $admin_menu, $admin_keyboard);
+                            answerCallbackQuery($_ENV['TELEGRAM_TOKEN'], $callback_query['id']);
+                            break;
+                            
+                        default:
+                            // پیام خطا برای عملیات نامعتبر
+                            answerCallbackQuery($_ENV['TELEGRAM_TOKEN'], $callback_query['id'], "⚠️ عملیات نامعتبر است!");
+                            break;
+                    }
+                } catch (Exception $e) {
+                    echo "خطا در پردازش پنل ادمین: " . $e->getMessage() . "\n";
+                    answerCallbackQuery($_ENV['TELEGRAM_TOKEN'], $callback_query['id'], "⚠️ خطا در پردازش درخواست: " . $e->getMessage());
+                }
+            }
             // پردازش عملیات مدیریت ادمین‌ها
-            if (strpos($callback_data, 'admin_action:') === 0) {
+            else if (strpos($callback_data, 'admin_action:') === 0) {
                 try {
                     require_once __DIR__ . '/application/controllers/AdminController.php';
                     $adminController = new \application\controllers\AdminController($user_id);
