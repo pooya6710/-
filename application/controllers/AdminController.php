@@ -491,10 +491,9 @@ class AdminController
             
             // میانگین دلتاکوین‌های بازیکنان (صفرها حساب نشوند)
             try {
-                $avg_deltacoins = DB::table('users_extra')
-                    ->whereRaw('delta_coins > 0')
-                    ->avg('delta_coins');
-                $stats['avg_deltacoins'] = $avg_deltacoins ? round($avg_deltacoins, 2) : 0;
+                // استفاده از raw query به جای whereRaw
+                $result = DB::rawQuery("SELECT AVG(delta_coins) as avg_value FROM users_extra WHERE delta_coins > 0");
+                $stats['avg_deltacoins'] = !empty($result) && isset($result[0]['avg_value']) ? round((float)$result[0]['avg_value'], 2) : 0;
             } catch (\Exception $e) {
                 $stats['avg_deltacoins'] = 0;
                 echo "خطا در محاسبه میانگین دلتاکوین‌ها: " . $e->getMessage() . "\n";
@@ -502,10 +501,8 @@ class AdminController
             
             // میانگین جام‌های بازیکنان (صفرها حساب نشوند)
             try {
-                $avg_trophies = DB::table('users_extra')
-                    ->whereRaw('trophy_count > 0')
-                    ->avg('trophy_count');
-                $stats['avg_trophies'] = $avg_trophies ? round($avg_trophies, 2) : 0;
+                $result = DB::rawQuery("SELECT AVG(trophy_count) as avg_value FROM users_extra WHERE trophy_count > 0");
+                $stats['avg_trophies'] = !empty($result) && isset($result[0]['avg_value']) ? round((float)$result[0]['avg_value'], 2) : 0;
             } catch (\Exception $e) {
                 $stats['avg_trophies'] = 0;
                 echo "خطا در محاسبه میانگین جام‌ها: " . $e->getMessage() . "\n";
