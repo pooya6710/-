@@ -492,8 +492,8 @@ class AdminController
             // میانگین دلتاکوین‌های بازیکنان (صفرها حساب نشوند)
             try {
                 $avg_deltacoins = DB::table('users_extra')
-                    ->whereRaw('deltacoins > 0')
-                    ->avg('deltacoins');
+                    ->whereRaw('delta_coins > 0')
+                    ->avg('delta_coins');
                 $stats['avg_deltacoins'] = $avg_deltacoins ? round($avg_deltacoins, 2) : 0;
             } catch (\Exception $e) {
                 $stats['avg_deltacoins'] = 0;
@@ -502,9 +502,9 @@ class AdminController
             
             // میانگین جام‌های بازیکنان (صفرها حساب نشوند)
             try {
-                $avg_trophies = DB::table('users')
-                    ->whereRaw('trophies > 0')
-                    ->avg('trophies');
+                $avg_trophies = DB::table('users_extra')
+                    ->whereRaw('trophy_count > 0')
+                    ->avg('trophy_count');
                 $stats['avg_trophies'] = $avg_trophies ? round($avg_trophies, 2) : 0;
             } catch (\Exception $e) {
                 $stats['avg_trophies'] = 0;
@@ -523,13 +523,21 @@ class AdminController
                 
             // تعداد کاربران محدود شده به خاطر اسپم
             try {
-                $stats['spam_limited_users'] = DB::table('users')
-                    ->where('spam_limited', true)
-                    ->count();
+                // بررسی اگر ستون spam_limited در جدول وجود داشته باشد
+                $exists = DB::rawQuery("SELECT column_name FROM information_schema.columns 
+                    WHERE table_name = 'users' AND column_name = 'spam_limited'");
+                
+                if (!empty($exists)) {
+                    $stats['spam_limited_users'] = DB::table('users')
+                        ->where('spam_limited', true)
+                        ->count();
+                } else {
+                    $stats['spam_limited_users'] = 0;
+                    echo "فیلد spam_limited در جدول users وجود ندارد\n";
+                }
             } catch (\Exception $e) {
-                // اگر فیلد spam_limited وجود ندارد، مقدار صفر را قرار می‌دهیم
                 $stats['spam_limited_users'] = 0;
-                echo "فیلد spam_limited در جدول users وجود ندارد\n";
+                echo "خطا در بررسی کاربران محدود شده: " . $e->getMessage() . "\n";
             }
                 
             // تعداد پیام‌های رد و بدل شده امروز
@@ -538,7 +546,22 @@ class AdminController
                 ->count();
                 
             // میانگین مهره‌های انداخته شده امروز در بازی‌ها
-            $stats['avg_moves_today'] = DB::raw("SELECT AVG(total_moves) FROM matches WHERE created_at >= '{$today} 00:00:00'");
+            try {
+                // بررسی وجود ستون
+                $exists = DB::rawQuery("SELECT column_name FROM information_schema.columns 
+                    WHERE table_name = 'matches' AND column_name = 'total_moves'");
+                
+                if (!empty($exists)) {
+                    $result = DB::raw("SELECT AVG(total_moves) as avg_value FROM matches WHERE created_at >= '{$today} 00:00:00'");
+                    $stats['avg_moves_today'] = isset($result['avg_value']) ? round((float)$result['avg_value'], 2) : 0;
+                } else {
+                    $stats['avg_moves_today'] = 0;
+                    echo "ستون total_moves در جدول matches وجود ندارد\n";
+                }
+            } catch (\Exception $e) {
+                $stats['avg_moves_today'] = 0;
+                echo "خطا در محاسبه میانگین مهره‌ها: " . $e->getMessage() . "\n";
+            }
                 
             // تعداد بازی‌های تمام شده با عدم بازی امروز
             $stats['abandoned_games_today'] = DB::table('matches')
@@ -547,16 +570,73 @@ class AdminController
                 ->count();
                 
             // تعداد کل دلتاکوین‌های جمع‌آوری شده امروز
-            $stats['deltacoins_earned_today'] = DB::raw("SELECT SUM(amount) FROM coin_transactions WHERE type = 'earn' AND created_at >= '{$today} 00:00:00'");
+            try {
+                // بررسی وجود جدول
+                $exists = DB::rawQuery("SELECT table_name FROM information_schema.tables 
+                    WHERE table_schema = 'public' AND table_name = 'delta_coin_transactions'");
+                
+                if (!empty($exists)) {
+                    $result = DB::raw("SELECT SUM(amount) FROM delta_coin_transactions WHERE type = 'earn' AND created_at >= '{$today} 00:00:00'");
+                    $stats['deltacoins_earned_today'] = isset($result['sum']) ? (int)$result['sum'] : 0;
+                } else {
+                    $stats['deltacoins_earned_today'] = 0;
+                    echo "جدول delta_coin_transactions وجود ندارد\n";
+                }
+            } catch (\Exception $e) {
+                $stats['deltacoins_earned_today'] = 0;
+                echo "خطا در محاسبه دلتاکوین‌های کسب شده امروز: " . $e->getMessage() . "\n";
+            }
                 
             // تعداد کل دلتاکوین‌های از دست داده شده امروز
-            $stats['deltacoins_spent_today'] = DB::raw("SELECT SUM(amount) FROM coin_transactions WHERE type = 'spend' AND created_at >= '{$today} 00:00:00'");
+            try {
+                $exists = DB::rawQuery("SELECT table_name FROM information_schema.tables 
+                    WHERE table_schema = 'public' AND table_name = 'delta_coin_transactions'");
+                
+                if (!empty($exists)) {
+                    $result = DB::raw("SELECT SUM(amount) FROM delta_coin_transactions WHERE type = 'spend' AND created_at >= '{$today} 00:00:00'");
+                    $stats['deltacoins_spent_today'] = isset($result['sum']) ? (int)$result['sum'] : 0;
+                } else {
+                    $stats['deltacoins_spent_today'] = 0;
+                    echo "جدول delta_coin_transactions وجود ندارد\n";
+                }
+            } catch (\Exception $e) {
+                $stats['deltacoins_spent_today'] = 0;
+                echo "خطا در محاسبه دلتاکوین‌های خرج شده امروز: " . $e->getMessage() . "\n";
+            }
                 
             // تعداد کل جام‌های جمع‌آوری شده امروز
-            $stats['trophies_earned_today'] = DB::raw("SELECT SUM(amount) FROM trophy_transactions WHERE type = 'earn' AND created_at >= '{$today} 00:00:00'");
+            try {
+                $exists = DB::rawQuery("SELECT table_name FROM information_schema.tables 
+                    WHERE table_schema = 'public' AND table_name = 'trophy_transactions'");
+                
+                if (!empty($exists)) {
+                    $result = DB::raw("SELECT SUM(amount) FROM trophy_transactions WHERE type = 'earn' AND created_at >= '{$today} 00:00:00'");
+                    $stats['trophies_earned_today'] = isset($result['sum']) ? (int)$result['sum'] : 0;
+                } else {
+                    $stats['trophies_earned_today'] = 0;
+                    echo "جدول trophy_transactions وجود ندارد\n";
+                }
+            } catch (\Exception $e) {
+                $stats['trophies_earned_today'] = 0;
+                echo "خطا در محاسبه جام‌های کسب شده امروز: " . $e->getMessage() . "\n";
+            }
                 
             // تعداد کل جام‌های از دست داده شده امروز
-            $stats['trophies_lost_today'] = DB::raw("SELECT SUM(amount) FROM trophy_transactions WHERE type = 'lose' AND created_at >= '{$today} 00:00:00'");
+            try {
+                $exists = DB::rawQuery("SELECT table_name FROM information_schema.tables 
+                    WHERE table_schema = 'public' AND table_name = 'trophy_transactions'");
+                
+                if (!empty($exists)) {
+                    $result = DB::raw("SELECT SUM(amount) FROM trophy_transactions WHERE type = 'lose' AND created_at >= '{$today} 00:00:00'");
+                    $stats['trophies_lost_today'] = isset($result['sum']) ? (int)$result['sum'] : 0;
+                } else {
+                    $stats['trophies_lost_today'] = 0;
+                    echo "جدول trophy_transactions وجود ندارد\n";
+                }
+            } catch (\Exception $e) {
+                $stats['trophies_lost_today'] = 0;
+                echo "خطا در محاسبه جام‌های از دست رفته امروز: " . $e->getMessage() . "\n";
+            }
                 
             return [
                 'success' => true,

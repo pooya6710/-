@@ -98,6 +98,28 @@ class DB
     }
     
     /**
+     * اجرای کوئری SQL خام و بازگرداندن مقدار
+     * @param string $query کوئری
+     * @param array $params پارامترهای کوئری (اختیاری)
+     * @return mixed نتیجه اجرای کوئری
+     */
+    public static function raw($query, $params = [])
+    {
+        try {
+            if (empty($params)) {
+                $stmt = self::getConnection()->query($query);
+            } else {
+                $stmt = self::getConnection()->prepare($query);
+                $stmt->execute($params);
+            }
+            return $stmt->fetch(\PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            error_log("Database raw error: " . $e->getMessage());
+            throw new \Exception("Database raw error: " . $e->getMessage());
+        }
+    }
+    
+    /**
      * ساخت کوئری بیلدر برای جدول مشخص
      * @param string $table نام جدول
      * @return QueryBuilder
